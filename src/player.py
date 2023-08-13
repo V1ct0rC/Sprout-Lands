@@ -217,9 +217,8 @@ class Player(pygame.sprite.Sprite):
         if self.selected_tool == "water":
             self.soil_layer.water(self.target_pos)
         
-    #TODO: Make the player use the selected seed
     def use_seed(self):
-        pass
+        self.soil_layer.plant(self.target_pos, self.selected_seed)
     
     def set_status(self):
         """

@@ -14,6 +14,67 @@ class SoilTile(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft = pos)
         self.z = z
 
+class Plant(pygame.sprite.Sprite):
+    def __init__(self, type, groups, soil, tile_watered):
+        super().__init__(groups)
+        self.type = type
+        self.z = LAYERS["ground_plants"]
+        self.tile_watered = tile_watered
+        self.soil = soil
+        
+        # Assets ----------------------------------------------------------------------------------------
+        self.frames = []
+        self.import_assets()
+        
+        # Growth attributes -----------------------------------------------------------------------------
+        self.age = 0
+        self.max_age = 3
+        self.growth_speed = GROWTH_SPEED[self.type]
+        self.grown = False
+        
+        # Image and animation ---------------------------------------------------------------------------
+        self.image = self.frames[self.age]
+        self.height_offset = -2 if self.type == "corn" else -4
+        # self.height_offset = 0
+        self.rect = self.image.get_rect(midbottom = (self.soil.rect.midbottom + pygame.math.Vector2(0, self.height_offset)))
+        
+    def import_assets(self):
+        """
+        Import the assets of the plant.
+        """
+        basic_pants = pygame.image.load("assets/Objects/Basic Plants.png").convert_alpha()
+        frame_width = basic_pants.get_width() // 6
+        frame_height = basic_pants.get_height() // 2
+        
+        for col in range(6):
+            for row in range(2):
+                frame = basic_pants.subsurface(pygame.Rect(col * frame_width, row * frame_height, frame_width, frame_height))
+                if self.type == "corn":
+                    if row == 0 and col >= 1 and col <= 4:
+                        self.frames.append(frame)
+                elif self.type == "tomato":
+                    if row == 1 and col >= 1 and col <= 4:
+                        self.frames.append(frame)
+
+    def grow(self):
+        """
+        Grow the plant.
+        """
+        if self.tile_watered(self.rect.center):
+            self.age += self.growth_speed
+            
+            if int(self.age) > 0:
+                self.z = LAYERS["main"]
+                #self.hitbox = self.rect.copy().inflate(-4, -4)
+                
+            if self.age >= self.max_age:
+                self.age == self.max_age
+                self.grown = True
+            else:
+                self.image = self.frames[int(self.age)]
+                self.rect = self.image.get_rect(midbottom = (self.soil.rect.midbottom + pygame.math.Vector2(0, self.height_offset)))
+        
+
 class Soil:
     """
     A class for the soil in the farm.
@@ -22,6 +83,7 @@ class Soil:
         self.all_sprites = all_sprites
         self.soil_sprites = pygame.sprite.Group()
         self.soil_water_sprites = pygame.sprite.Group()
+        self.plant_sprites = pygame.sprite.Group()
         
         self.soil_surface = None
         self.soil_water = None
@@ -131,4 +193,30 @@ class Soil:
                     self.grid[y][x].remove("Watered")
                     
         self.create_soil_tiles()
-                
+             
+    def tile_watered(self, pos):
+        """
+        Check if the tile is watered.
+
+        Args:
+            pos (Tuple[int, int]): The position of the tile.
+
+        Returns:
+            bool: True if the tile is watered, False otherwise.
+        """
+        x = pos[0] // TILE_SIZE
+        y = pos[1] // TILE_SIZE
+        return "Watered" in self.grid[y][x]         
+       
+    def update_plants(self):
+        for plants in self.plant_sprites.sprites():
+            plants.grow()
+       
+    def plant(self, point, seed):
+        for soil_sprite in self.soil_sprites.sprites():
+            if soil_sprite.rect.collidepoint(point):
+                x = soil_sprite.rect.x // TILE_SIZE
+                y = soil_sprite.rect.y // TILE_SIZE
+                if "Planted" not in self.grid[y][x]:
+                    self.grid[y][x].append("Planted")
+                    Plant(seed, [self.all_sprites, self.plant_sprites], soil_sprite, self.tile_watered)
