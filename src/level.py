@@ -4,7 +4,7 @@ from player import Player
 from overlay import Overlay
 from sprites import Tile, Water, WildFlower, Tree, Interaction, Particle
 from soil import Soil
-from weather import Rain
+from weather import Rain, Day
 
 from pytmx.util_pygame import load_pygame
 from random import randint
@@ -68,6 +68,7 @@ class Level:
         self.rain = Rain(self.all_sprites)
         self.raining = (randint(0, 100) < 30)
         self.soil_layer.raining = self.raining
+        self.day = Day()
         
     def import_assets(self):
         """
@@ -163,6 +164,9 @@ class Level:
                     Tile(pos=(x * TILE_SIZE, y * TILE_SIZE), surf=pygame.Surface((TILE_SIZE, TILE_SIZE)), groups=self.collision_sprites, z=LAYERS["main"])      
 
     def crop_collision(self):
+        """
+        Check if the player is colliding with a fully grown crop, and if so, update the inventory and remove the crop.
+        """
         if self.soil_layer.plant_sprites:
             for plant in self.soil_layer.plant_sprites.sprites():
                 if plant.rect.colliderect(self.player.hitbox) and plant.grown:
@@ -193,6 +197,8 @@ class Level:
         self.raining = (randint(0, 100) < 30)
         self.soil_layer.raining = self.raining
         
+        self.day.reset()
+        
         if self.raining:
             self.soil_layer.water_all()
         
@@ -216,6 +222,8 @@ class Level:
         self.overlay.display()
         
         self.crop_collision()
+        
+        self.day.update(dt)
         
         if self.raining:
             self.rain.update()

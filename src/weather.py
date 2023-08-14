@@ -5,6 +5,27 @@ from sprites import Tile
 from random import randint, choice
 
 
+class Day:
+    """
+    Class for the day/night cycle.
+    """
+    def __init__(self):
+        self.display = pygame.display.get_surface()
+        self.screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.day_color = [255, 255, 255]
+        self.night_color = [40, 80, 115]
+        
+    def reset(self):
+        self.day_color = [255, 255, 255]
+        
+    def update(self, dt):
+        for i, color in enumerate(self.night_color):
+            if self.day_color[i] > color:
+                self.day_color[i] -= 2 * dt
+                
+        self.screen.fill(self.day_color)
+        self.display.blit(self.screen, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+
 class Drop(Tile):
     """
     Class for rain drops. It can be used for rain particles or for puddles.
