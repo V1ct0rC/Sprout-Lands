@@ -70,9 +70,9 @@ class Plant(pygame.sprite.Sprite):
             if self.age >= self.max_age:
                 self.age == self.max_age
                 self.grown = True
-            else:
-                self.image = self.frames[int(self.age)]
-                self.rect = self.image.get_rect(midbottom = (self.soil.rect.midbottom + pygame.math.Vector2(0, self.height_offset)))
+          
+            self.image = self.frames[int(self.age)]
+            self.rect = self.image.get_rect(midbottom = (self.soil.rect.midbottom + pygame.math.Vector2(0, self.height_offset)))
         
 
 class Soil:

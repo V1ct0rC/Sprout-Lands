@@ -2,7 +2,7 @@ import pygame
 from settings import *
 from player import Player
 from overlay import Overlay
-from sprites import Tile, Water, WildFlower, Tree, Interaction
+from sprites import Tile, Water, WildFlower, Tree, Interaction, Particle
 from soil import Soil
 from weather import Rain
 
@@ -161,6 +161,18 @@ class Level:
             if layer.name == "Collision Layer":
                 for x, y, surf in layer.tiles():
                     Tile(pos=(x * TILE_SIZE, y * TILE_SIZE), surf=pygame.Surface((TILE_SIZE, TILE_SIZE)), groups=self.collision_sprites, z=LAYERS["main"])      
+
+    def crop_collision(self):
+        if self.soil_layer.plant_sprites:
+            for plant in self.soil_layer.plant_sprites.sprites():
+                if plant.rect.colliderect(self.player.hitbox) and plant.grown:
+                    self.update_inventory(plant.type)
+                    plant.kill()
+                    Particle(plant.rect.topleft, plant.image, self.all_sprites, z=LAYERS["main"])
+                    
+                    y = plant.rect.centery // TILE_SIZE
+                    x = plant.rect.centerx // TILE_SIZE
+                    self.soil_layer.grid[y][x].remove("Planted")
     
     def update_inventory(self, item):
         """
@@ -203,11 +215,15 @@ class Level:
         self.all_sprites.update(dt)  
         self.overlay.display()
         
+        self.crop_collision()
+        
         if self.raining:
             self.rain.update()
         
         if self.player.asleep:
             self.transition.play()
+            
+        #print(self.player.item_inventory)
 
 class CameraGroup(pygame.sprite.Group):
     """
