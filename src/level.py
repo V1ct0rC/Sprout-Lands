@@ -136,6 +136,10 @@ class Level:
                 for obj in layer:
                     WildFlower(pos=(obj.x, obj.y), surf=obj.image, groups=[self.all_sprites, self.collision_sprites])
                     
+            if layer.name == "Ground Objects":
+                for obj in layer:
+                    Tile(pos=(obj.x, obj.y), surf=obj.image, groups=self.all_sprites, z=LAYERS["ground_plants"])
+                    
             # Trees (object layer)
             if layer.name == "Trees":
                 for obj in layer:
@@ -157,6 +161,9 @@ class Level:
                                              soil_layer=self.soil_layer)
                     if obj.name == "Bed":
                         Interaction(pos=(obj.x, obj.y), size=(obj.width, obj.height), groups=self.interaction_sprites, name=obj.name)
+                        
+                    if obj.name == "Trade Boat":
+                        pass
             
             # Collision layer ---------------------------------------------------------------------------
             if layer.name == "Collision Layer":
